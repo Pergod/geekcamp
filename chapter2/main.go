@@ -31,5 +31,5 @@ func healthz(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(200)
 	io.WriteString(w, "ok")
 	// 访问日志记录host , http code
-	log.Printf("Host: %s , Http Code: %d", r.Host, 200)
+	log.Printf("Host: %s , Http Code: %d", r.Host, http.StatusOK)
 }
