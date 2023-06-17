@@ -1,4 +1,4 @@
-FROM centos7:latest
+FROM centos:latest
 LABEL authors="Flystar"
 
 EXPOSE 80
