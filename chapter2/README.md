@@ -10,3 +10,5 @@
 `docker run --name httpserver -p 8888:80 http server`
 6. 验证结果
 `curl localhost:8888/healthz`
+7. 推送镜像
+`docker push `
