@@ -51,13 +51,13 @@ $ sudo apt-mark hold kubelet kubeadm kubectl
 ```
 
 ### kubeadm init
-<!-- 注意替换IP -->
+*注意替换IP*
 ```shell
 $ echo "192.168.46.13 cncamp.com" >> /etc/hosts
 ```
 
+*注意替换IP*
 ```shell
-<!-- 注意替换IP -->
 $ kubeadm init \
  --image-repository registry.aliyuncs.com/google_containers \
  --kubernetes-version v1.27.3 \
@@ -83,9 +83,9 @@ kubectl taint nodes --all node-role.kubernetes.io/not-ready:NoSchedule-
 
 ## Install calico cni plugin
 
-https://docs.projectcalico.org/getting-started/kubernetes/quickstart
-<!-- 可能会提示connection refused,这种情况下可以先把文件下载拷贝到本地,然后执行 -->
+*可能会提示connection refused,这种情况下可以先把文件下载拷贝到本地,然后执行*
 
+https://docs.projectcalico.org/getting-started/kubernetes/quickstart
 ```shell
 $ kubectl create -f https://docs.projectcalico.org/manifests/tigera-operator.yaml
 $ kubectl create -f https://docs.projectcalico.org/manifests/custom-resources.yaml
