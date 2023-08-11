@@ -1,31 +1,55 @@
-### Letting iptables see bridged traffic
+#### 作业1
+### 优雅启停
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: http-server
+spec:
+  containers:
+    - name: http-server
+      image: pergod/httpserver:v1
+      # Readiness探针：检查容器是否已准备好接收流量
+      readinessProbe:
+        httpGet:
+          path: /healthz
+          port: 80
+        initialDelaySeconds: 30
+        periodSeconds: 5
+        successThreshold: 2
+      # 命令探活： 在容器中执行指定的命令，并检查其退出状态码来判断容器的健康状态
+      livenessProbe:
+        exec:
+          command:
+            - cat
+            - /tmp/health
+        initialDelaySeconds: 15
+        periodSeconds: 30
+      # 容器停止的等待时间，Kubernetes 会在发送 SIGTERM 信号给容器后等待一段时间，
+      # 以便容器能够处理完正在运行的请求。
+      # 如果在等待时间内容器仍未停止，Kubernetes 会发送 SIGKILL 信号来强制终止容器。
+      terminationGracePeriodSeconds: 30
 
-```shell
-$ cat <<EOF | sudo tee /etc/modules-load.d/k8s.conf
-br_netfilter
-EOF
-
-$ cat <<EOF | sudo tee /etc/sysctl.d/k8s.conf
-net.bridge.bridge-nf-call-ip6tables = 1
-net.bridge.bridge-nf-call-iptables = 1
-EOF
-$ sudo sysctl --system
 ```
-### inactive firewall
-```shell
-sudo ufw status
-sudo ufw disable
-```
-### close swap
-```shell
-sed -i '/ swap / s/^/#/' /etc/fstab
-```
 
-### Update the apt package index and install packages needed to use the Kubernetes apt repository:
-
+### 安装metrics
 ```shell
-$ sudo apt-get update
-$ sudo apt-get install -y apt-transport-https ca-certificates curl
+kubectl apply -f https://raw.githubusercontent.com/pythianarora/total-practice/master/sample-kubernetes-code/metrics-server.yaml
+```
+### 查看pod资源占用
+```shell
+kubectl top pod -n default
+```
+![img.png](img.png)
+
+### 设置资源&QoS
+
+```yaml
+resources:
+  requests:
+    cpu: "10m"
+    memory: "25Mi"
+qosClass: Burstable 
 ```
 
 ### Install kubeadm
@@ -34,69 +58,33 @@ $ sudo apt-get install -y apt-transport-https ca-certificates curl
 $ sudo curl -s https://mirrors.aliyun.com/kubernetes/apt/doc/apt-key.gpg | sudo apt-key add -
 ```
 
-### Add the Kubernetes apt repository
-
+#### 作业2 - Service
+### 设置label
+```yaml
+metadata:
+name: http-server
+labels:
+app: my-http
+```
+### 创建service
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-basic
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      protocol: TCP
+      name: http
+  selector:
+    app: my-http
+```
+### 测试
 ```shell
-$ sudo tee /etc/apt/sources.list.d/kubernetes.list <<-'EOF'
-deb https://mirrors.aliyun.com/kubernetes/apt kubernetes-xenial main
-EOF
+curl 10.101.203.31/healthz
 ```
+![img_1.png](img_1.png)
 
-### Update apt package index, install kubelet, kubeadm and kubectl
-
-```shell
-$ sudo apt-get update
-$ sudo apt-get install -y kubelet kubeadm kubectl
-$ sudo apt-mark hold kubelet kubeadm kubectl
-```
-
-### kubeadm init
-*注意替换IP*
-```shell
-$ echo "192.168.46.13 cncamp.com" >> /etc/hosts
-```
-
-*注意替换IP*
-```shell
-$ kubeadm init \
- --image-repository registry.aliyuncs.com/google_containers \
- --kubernetes-version v1.27.3 \
- --pod-network-cidr=192.168.0.0/16 \
- --apiserver-advertise-address=192.168.46.13
-```
-
-### Copy kubeconfig
-
-```shell
-$ mkdir -p $HOME/.kube
-$ sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
-$ sudo chown $(id -u):$(id -g) $HOME/.kube/config
-```
-
-### Untaint master
-
-```shell
-kubectl taint nodes --all node-role.kubernetes.io/master-
-kubectl taint nodes --all node-role.kubernetes.io/control-plane-
-kubectl taint nodes --all node-role.kubernetes.io/not-ready:NoSchedule-
-```
-
-## Install calico cni plugin
-
-*可能会提示connection refused,这种情况下可以先把文件下载拷贝到本地,然后执行*
-
-https://docs.projectcalico.org/getting-started/kubernetes/quickstart
-```shell
-$ kubectl create -f https://docs.projectcalico.org/manifests/tigera-operator.yaml
-$ kubectl create -f https://docs.projectcalico.org/manifests/custom-resources.yaml
-```
-
-### if you want to enable containerd during start, set the cri-socket parameter during kubeadm init
-```
-kubeadm init \
- --image-repository registry.aliyuncs.com/google_containers \
- --kubernetes-version v1.27.3 \
- --pod-network-cidr=192.168.0.0/16 \
- --cri-socket /run/containerd/containerd.sock \
- --apiserver-advertise-address=192.168.46.13
- ```
+#### 作业2 - Ingress 
