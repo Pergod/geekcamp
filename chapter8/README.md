@@ -32,6 +32,18 @@ spec:
 
 ```
 
+### 创建Pod
+```shell
+kubectl create -f httpserver.yaml
+```
+
+### 验证
+```shell
+kubectl get pod
+```
+
+![img_5.png](img_5.png)
+
 ### 安装metrics
 ```shell
 kubectl apply -f https://raw.githubusercontent.com/pythianarora/total-practice/master/sample-kubernetes-code/metrics-server.yaml
@@ -75,7 +87,7 @@ spec:
   selector:
     app: my-http
 ```
-### 测试
+### 验证
 ```shell
 curl 10.101.203.31/healthz
 ```
