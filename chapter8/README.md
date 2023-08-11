@@ -1,0 +1,102 @@
+### Letting iptables see bridged traffic
+
+```shell
+$ cat <<EOF | sudo tee /etc/modules-load.d/k8s.conf
+br_netfilter
+EOF
+
+$ cat <<EOF | sudo tee /etc/sysctl.d/k8s.conf
+net.bridge.bridge-nf-call-ip6tables = 1
+net.bridge.bridge-nf-call-iptables = 1
+EOF
+$ sudo sysctl --system
+```
+### inactive firewall
+```shell
+sudo ufw status
+sudo ufw disable
+```
+### close swap
+```shell
+sed -i '/ swap / s/^/#/' /etc/fstab
+```
+
+### Update the apt package index and install packages needed to use the Kubernetes apt repository:
+
+```shell
+$ sudo apt-get update
+$ sudo apt-get install -y apt-transport-https ca-certificates curl
+```
+
+### Install kubeadm
+
+```shell
+$ sudo curl -s https://mirrors.aliyun.com/kubernetes/apt/doc/apt-key.gpg | sudo apt-key add -
+```
+
+### Add the Kubernetes apt repository
+
+```shell
+$ sudo tee /etc/apt/sources.list.d/kubernetes.list <<-'EOF'
+deb https://mirrors.aliyun.com/kubernetes/apt kubernetes-xenial main
+EOF
+```
+
+### Update apt package index, install kubelet, kubeadm and kubectl
+
+```shell
+$ sudo apt-get update
+$ sudo apt-get install -y kubelet kubeadm kubectl
+$ sudo apt-mark hold kubelet kubeadm kubectl
+```
+
+### kubeadm init
+*注意替换IP*
+```shell
+$ echo "192.168.46.13 cncamp.com" >> /etc/hosts
+```
+
+*注意替换IP*
+```shell
+$ kubeadm init \
+ --image-repository registry.aliyuncs.com/google_containers \
+ --kubernetes-version v1.27.3 \
+ --pod-network-cidr=192.168.0.0/16 \
+ --apiserver-advertise-address=192.168.46.13
+```
+
+### Copy kubeconfig
+
+```shell
+$ mkdir -p $HOME/.kube
+$ sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+$ sudo chown $(id -u):$(id -g) $HOME/.kube/config
+```
+
+### Untaint master
+
+```shell
+kubectl taint nodes --all node-role.kubernetes.io/master-
+kubectl taint nodes --all node-role.kubernetes.io/control-plane-
+kubectl taint nodes --all node-role.kubernetes.io/not-ready:NoSchedule-
+```
+
+## Install calico cni plugin
+
+*可能会提示connection refused,这种情况下可以先把文件下载拷贝到本地,然后执行*
+
+https://docs.projectcalico.org/getting-started/kubernetes/quickstart
+```shell
+$ kubectl create -f https://docs.projectcalico.org/manifests/tigera-operator.yaml
+$ kubectl create -f https://docs.projectcalico.org/manifests/custom-resources.yaml
+```
+
+### if you want to enable containerd during start, set the cri-socket parameter during kubeadm init
+```
+kubeadm init \
+ --image-repository registry.aliyuncs.com/google_containers \
+ --kubernetes-version v1.27.3 \
+ --pod-network-cidr=192.168.0.0/16 \
+ --cri-socket /run/containerd/containerd.sock \
+ --apiserver-advertise-address=192.168.46.13
+ ```
