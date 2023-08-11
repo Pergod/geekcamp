@@ -3,7 +3,8 @@ kind: Ingress
 metadata:
   name: gateway
   annotations:
-    kubernetes.io/ingress.class: "nginx"
+    spec:
+      ingressClassName: "nginx"
 spec:
   tls:
     - hosts:
@@ -17,6 +18,6 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: nginx
+                name: nginx-basic
                 port:
                   number: 80

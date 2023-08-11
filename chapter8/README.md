@@ -52,12 +52,6 @@ resources:
 qosClass: Burstable 
 ```
 
-### Install kubeadm
-
-```shell
-$ sudo curl -s https://mirrors.aliyun.com/kubernetes/apt/doc/apt-key.gpg | sudo apt-key add -
-```
-
 #### 作业2 - Service
 ### 设置label
 ```yaml
@@ -88,3 +82,57 @@ curl 10.101.203.31/healthz
 ![img_1.png](img_1.png)
 
 #### 作业2 - Ingress 
+### ingress controller
+```shell
+kubectl create -f nginx-ingress-deployment.yaml
+```
+### 生成 key-cert
+```shell
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout tls.key -out tls.crt -subj "/CN=cncamp.com/O=cncamp" -addext "subjectAltName = DNS:cncamp.com"
+```
+
+```生成 secret对象
+kubectl create secret tls cncamp-tls --cert=./tls.crt --key=./tls.key
+```
+### 验证
+```shell
+kubectl get secret
+```
+![img_2.png](img_2.png)
+
+### 创建ingress
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: gateway
+  annotations:
+    spec:
+      ingressClassName: "nginx"
+spec:
+  tls:
+    - hosts:
+        - cncamp.com
+      secretName: cncamp-tls
+  rules:
+    - host: cncamp.com
+      http:
+        paths:
+          - path: "/"
+            pathType: Prefix
+            backend:
+              service:
+                name: nginx-basic
+                port:
+                  number: 80
+```
+### 验证
+```shell
+kubectl get service -n ingress-nginx
+```
+![img_3.png](img_3.png)
+
+```shell
+curl -H "Host: cncamp.com" https://10.96.203.154/healthz -v -k
+```
+![img_4.png](img_4.png)
