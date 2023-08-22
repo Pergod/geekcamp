@@ -7,6 +7,22 @@ helm repo update
 
 helm upgrade --install loki grafana/loki-stack --set grafana.enabled=true,prometheus.enabled=true,prometheus.alertmanager.persistentVolume.enabled=false,prometheus.server.persistentVolume.enabled=false
 ```
+![img.png](img.png)
+
+### 将grafana service type修改为NodePort
+```shell
+kubectl edit svc loki-grafana -oyaml -n default
+```
+![img_2.png](img_2.png)
+
+### 获取grafana service的用户名密码
+![img_3.png](img_3.png)
+将红框所示部分的内容，base64解码即可
+
+### 通过浏览器访问
+![img_1.png](img_1.png)
+![img_4.png](img_4.png)
+
 
 ### 验证
 ```yaml
