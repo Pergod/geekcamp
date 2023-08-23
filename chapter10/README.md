@@ -32,6 +32,7 @@ kubectl edit svc loki-grafana -oyaml -n default
 ```
 ![img_5.png](img_5.png)
 
+### Deployment定义
 ```yaml
 apiVersion: apps/v1
 kind: Deployment
@@ -57,15 +58,18 @@ spec:
           ports:
             - containerPort: 80
 ```
+```shell
+kubectl create -f httpserver-metrics.yaml
+```
 ![img_6.png](img_6.png)
 
-### 获取Metrics数据
+### 获取Metrics数据验证
 ```shell
 curl 192.168.47.140:80/metrics
 ```
 ![img_7.png](img_7.png)
 
-### 访问相关接口
+### 访问时延接口
 ```shell
 curl 192.168.47.140:80/latency
 ```
