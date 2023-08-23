@@ -224,5 +224,5 @@ curl 192.168.47.140:80/latency
   "version": 2
 }
 ```
-
+### Dashboard查看直方图
 ![img_10.png](img_10.png)
