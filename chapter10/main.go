@@ -2,18 +2,43 @@ package main
 
 import (
 	"fmt"
+	"geekcamp/chapter10/metrics"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"io"
 	"log"
+	"math/rand"
 	"net/http"
 	"os"
+	"time"
 )
 
 func main() {
-	http.HandleFunc("/healthz", healthz)
-	err := http.ListenAndServe(":80", nil)
+	metrics.Register()
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/latency", latency)
+	mux.HandleFunc("/healthz", healthz)
+	mux.Handle("/metrics", promhttp.Handler())
+
+	srv := http.Server{
+		Addr:    ":80",
+		Handler: mux,
+	}
+	err := srv.ListenAndServe()
 	if err != nil {
 		log.Fatal(err)
 	}
+
+}
+
+func latency(w http.ResponseWriter, request *http.Request) {
+	// 随机时延
+	startTime := time.Now()
+	delay := rand.Int31n(2)
+	time.Sleep(time.Second * time.Duration(delay))
+	io.WriteString(w, "ok")
+	duration := time.Since(startTime).Seconds()
+	metrics.HttpRequestLatency.WithLabelValues("/example").Observe(duration)
 }
 
 func healthz(w http.ResponseWriter, r *http.Request) {

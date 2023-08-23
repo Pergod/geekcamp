@@ -24,34 +24,29 @@ kubectl edit svc loki-grafana -oyaml -n default
 ![img_4.png](img_4.png)
 
 
-### 验证
+### Prometheus
 ```yaml
-apiVersion: v1
-kind: Pod
+apiVersion: apps/v1
+kind: Deployment
 metadata:
-  name: http-server
+  name: httpserver
 spec:
-  containers:
-    - name: http-server
-      image: pergod/httpserver:v1
-      # Readiness探针：检查容器是否已准备好接收流量
-      readinessProbe:
-        httpGet:
-          path: /healthz
-          port: 80
-        initialDelaySeconds: 30
-        periodSeconds: 5
-        successThreshold: 2
-      # 命令探活： 在容器中执行指定的命令，并检查其退出状态码来判断容器的健康状态
-      livenessProbe:
-        exec:
-          command:
-            - cat
-            - /tmp/health
-        initialDelaySeconds: 15
-        periodSeconds: 30
-      # 容器停止的等待时间，Kubernetes 会在发送 SIGTERM 信号给容器后等待一段时间，
-      # 以便容器能够处理完正在运行的请求。
-      # 如果在等待时间内容器仍未停止，Kubernetes 会发送 SIGKILL 信号来强制终止容器。
-      terminationGracePeriodSeconds: 30
+  replicas: 1
+  selector:
+    matchLabels:
+      app: httpserver
+  template:
+    metadata:
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "80"
+      labels:
+        app: httpserver
+    spec:
+      containers:
+        - name: httpserver
+          imagePullPolicy: Always
+          image: pergod/httpserver:v1.1-metrics
+          ports:
+            - containerPort: 80
 ```
