@@ -18,6 +18,46 @@ istioctl install --set profile=demo -y
 ```shell
 kubectl create ns sidecar
 kubectl label ns sidecar istio-injection=enabled
-kubectl apply -f nginx.yaml -n sidecar
-kubectl apply -f toolbox.yaml -n sidecar
+```
+
+### 发布为ingress gateway(https)
+```yaml
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: https-service0
+  namespace: tracing
+spec:
+  gateways:
+    - https-service0
+  hosts:
+    - 'cncamp.com'
+  http:
+    - match:
+        - uri:
+            exact: /service0
+      route:
+        - destination:
+            host: service0
+            port:
+              number: 80
+---
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: https-service0
+  namespace: tracing
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+    - hosts:
+        - 'istioexam.com'
+      port:
+        name: https-service0
+        number: 443
+        protocol: HTTPS
+      tls:
+        mode: SIMPLE
+        credentialName: istioexam-credential
 ```
