@@ -44,6 +44,7 @@ curl --resolve cncamp.com:443:$INGRESS_IP https://cncamp.com/healthz -v -k
 结果如下
 ![img_4.png](img_4.png)
 
+---------------------------------------------------------------------------------------------------------------------------
 
 ### 安装jaeger，具体文件见jaeger.yaml
 ```shell
