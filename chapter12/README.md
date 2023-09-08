@@ -35,8 +35,11 @@ kubectl apply -f istio-specs.yaml -n sidecar
 ```shell
 kubectl get svc -nistio-system
 ```
-![img_2.png](img_2.png)
+![img_3.png](img_3.png)
 
 ```shell
-curl --resolve cncamp.com:10.111.164.17 https://cncamp.com/healthz -v -k
+export INGRESS_IP=10.111.164.17
+curl --resolve cncamp.com:443:$INGRESS_IP https://cncamp.com/healthz -v -k
 ```
+结果如下
+![img_4.png](img_4.png)
