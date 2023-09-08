@@ -1,5 +1,3 @@
-
-
 ### istio安装
 ```shell
 curl -L https://istio.io/downloadIstio | sh -
@@ -20,44 +18,25 @@ kubectl create ns sidecar
 kubectl label ns sidecar istio-injection=enabled
 ```
 
-### 发布为ingress gateway(https)
-```yaml
-apiVersion: networking.istio.io/v1beta1
-kind: VirtualService
-metadata:
-  name: https-service0
-  namespace: tracing
-spec:
-  gateways:
-    - https-service0
-  hosts:
-    - 'cncamp.com'
-  http:
-    - match:
-        - uri:
-            exact: /service0
-      route:
-        - destination:
-            host: service0
-            port:
-              number: 80
----
-apiVersion: networking.istio.io/v1beta1
-kind: Gateway
-metadata:
-  name: https-service0
-  namespace: tracing
-spec:
-  selector:
-    istio: ingressgateway
-  servers:
-    - hosts:
-        - 'istioexam.com'
-      port:
-        name: https-service0
-        number: 443
-        protocol: HTTPS
-      tls:
-        mode: SIMPLE
-        credentialName: istioexam-credential
+### 创建Deployment，具体文件见httpserver.yaml
+```shell
+kubectl create -f httpserver.yaml -n sidecar
+```
+![img_1.png](img_1.png)
+
+
+### 发布为ingress gateway(https)，具体文件见istio-specs.yaml
+```shell
+openssl req -x509 -sha256 -nodes -days 365 -newkey rsa:2048 -subj '/O=cncamp Inc./CN=*.cncamp.io' -keyout cncamp.io.key -out cncamp.io.crt
+kubectl create -n istio-system secret tls cncamp-credential --key=cncamp.io.key --cert=cncamp.io.crt
+kubectl apply -f istio-specs.yaml -n sidecar
+```
+
+```shell
+kubectl get svc -nistio-system
+```
+![img_2.png](img_2.png)
+
+```shell
+curl --resolve cncamp.com:10.111.164.17 https://cncamp.com/healthz -v -k
 ```
