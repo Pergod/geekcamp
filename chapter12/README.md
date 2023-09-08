@@ -12,7 +12,7 @@ istioctl install --set profile=demo -y
 ![img.png](img.png)
 
 
-### 创建namespace（非必要步骤） 
+### 创建namespace
 ```shell
 kubectl create ns sidecar
 kubectl label ns sidecar istio-injection=enabled
@@ -43,3 +43,39 @@ curl --resolve cncamp.com:443:$INGRESS_IP https://cncamp.com/healthz -v -k
 ```
 结果如下
 ![img_4.png](img_4.png)
+
+
+### 安装jaeger，具体文件见jaeger.yaml
+```shell
+kubectl apply -f jaeger.yaml
+```
+
+### 创建namespace，相关yaml文件目录下同名文件
+```shell
+kubectl create ns tracing
+kubectl label ns tracing istio-injection=enabled
+kubectl -n tracing create -f service0.yaml
+kubectl -n tracing create -f service1.yaml
+kubectl -n tracing create -f service2.yaml
+kubectl create -f istio-tracing.yaml -n tracing
+```
+![img_5.png](img_5.png)
+
+```shell
+kubectl get svc -nistio-system
+```
+![img_6.png](img_6.png)
+
+```shell
+curl 10.111.164.17/service0
+```
+![img_7.png](img_7.png)
+
+```shell
+istioctl dashboard jaeger
+```
+![img_8.png](img_8.png)
+
+![img_9.png](img_9.png)
+
+![img_10.png](img_10.png)
